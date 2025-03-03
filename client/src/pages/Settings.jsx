@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Save, LogOut } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 
 function Settings() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser } = useAuth();
   const { addNotification } = useNotifications();
   
   const [settings, setSettings] = useState({
@@ -56,9 +56,29 @@ function Settings() {
     localStorage.setItem('settings', JSON.stringify(settings));
     addNotification('Settings saved successfully!', 'success');
   };
-  
-  const handleLogout = () => {
-    logout();
+
+  const handleCancel = () => {
+    const savedSettings = localStorage.getItem('settings');
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings));
+    } else {
+      setSettings({
+        emailSync: {
+          frequency: 'hourly',
+          autoProcess: true
+        },
+        notifications: {
+          email: true,
+          browser: true,
+          newInvoice: true,
+          approvalRequired: true
+        },
+        display: {
+          theme: 'light',
+          resultsPerPage: 10
+        }
+      });
+    }
   };
 
   return (
@@ -74,25 +94,23 @@ function Settings() {
         <div className="p-6">
           <div className="space-y-8">
             {/* Account Section */}
-            <div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Account Information</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-lg font-medium text-gray-700">
-                      {currentUser?.name.charAt(0)}
-                    </span>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">{currentUser?.name}</p>
-                    <p className="text-sm text-gray-500">{currentUser?.email}</p>
-                  </div>
+              <div className="flex items-center">
+                <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-lg font-medium text-gray-700">
+                    {currentUser?.name.charAt(0)}
+                  </span>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-900">{currentUser?.name}</p>
+                  <p className="text-sm text-gray-500">{currentUser?.email}</p>
                 </div>
               </div>
             </div>
 
             {/* Email Sync Settings */}
-            <div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Email Sync Settings</h2>
               <div className="space-y-4">
                 <div>
@@ -129,7 +147,7 @@ function Settings() {
             </div>
 
             {/* Notification Settings */}
-            <div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Notification Settings</h2>
               <div className="space-y-4">
                 <div className="flex items-center">
@@ -193,7 +211,7 @@ function Settings() {
             </div>
 
             {/* Display Settings */}
-            <div>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Display Settings</h2>
               <div className="space-y-4">
                 <div>
@@ -209,7 +227,6 @@ function Settings() {
                   >
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
-                    <option value="system">System Default</option>
                   </select>
                 </div>
                 
@@ -221,13 +238,12 @@ function Settings() {
                     id="results-per-page"
                     name="results-per-page"
                     value={settings.display.resultsPerPage}
-                    onChange={(e) => handleInputChange('display', 'resultsPerPage', parseInt(e.target.value))}
+                    onChange={(e) => handleInputChange('display', 'resultsPerPage', e.target.value)}
                     className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                   >
+                    <option value="5">5</option>
                     <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
+                    <option value="20">20</option>
                   </select>
                 </div>
               </div>
@@ -237,13 +253,11 @@ function Settings() {
           <div className="mt-8 flex justify-between">
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={handleCancel}
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Log out
+              Cancel
             </button>
-            
             <button
               type="button"
               onClick={handleSaveSettings}

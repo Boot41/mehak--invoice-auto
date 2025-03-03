@@ -8,6 +8,7 @@ function InvoiceDetails() {
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('details');
 
   useEffect(() => {
     // Load invoice data
@@ -109,170 +110,199 @@ function InvoiceDetails() {
 
             {/* Invoice Details */}
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Invoice Details</h2>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Supplier</p>
-                    <p className="mt-1 text-sm text-gray-900">{invoice.supplier}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Invoice Number</p>
-                    <p className="mt-1 text-sm text-gray-900">{invoice.invoiceNumber}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Invoice Date</p>
-                    <p className="mt-1 text-sm text-gray-900">{invoice.date}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Due Date</p>
-                    <p className="mt-1 text-sm text-gray-900">{invoice.dueDate}</p>
-                  </div>
+              <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Invoice Details</h2>
+                <div className="border-b border-gray-200">
+                  <nav className="flex -mb-px space-x-8">
+                    <button
+                      onClick={() => setActiveTab('details')}
+                      className={`py-4 px-6 text-sm font-medium text-gray-500 whitespace-nowrap border-b-2 ${
+                        activeTab === 'details'
+                          ? 'border-blue-500 text-blue-600'
+                          : 'border-transparent hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Details
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('lineItems')}
+                      className={`py-4 px-6 text-sm font-medium text-gray-500 whitespace-nowrap border-b-2 ${
+                        activeTab === 'lineItems'
+                          ? 'border-blue-500 text-blue-600'
+                          : 'border-transparent hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Line Items
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('approvalHistory')}
+                      className={`py-4 px-6 text-sm font-medium text-gray-500 whitespace-nowrap border-b-2 ${
+                        activeTab === 'approvalHistory'
+                          ? 'border-blue-500 text-blue-600'
+                          : 'border-transparent hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Approval History
+                    </button>
+                  </nav>
                 </div>
-              </div>
+                <div className="mt-6">
+                  {activeTab === 'details' && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                          <p className="text-sm font-medium text-gray-500">Supplier</p>
+                          <p className="mt-1 text-sm text-gray-900">{invoice.supplier}</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                          <p className="text-sm font-medium text-gray-500">Invoice Number</p>
+                          <p className="mt-1 text-sm text-gray-900">{invoice.invoiceNumber}</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                          <p className="text-sm font-medium text-gray-500">Invoice Date</p>
+                          <p className="mt-1 text-sm text-gray-900">{invoice.date}</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                          <p className="text-sm font-medium text-gray-500">Due Date</p>
+                          <p className="mt-1 text-sm text-gray-900">{invoice.dueDate}</p>
+                        </div>
+                      </div>
 
-              {invoice.supplierAddress && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Supplier Information</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-900">{invoice.supplier}</p>
-                    <p className="text-sm text-gray-900">{invoice.supplierAddress}</p>
-                    {invoice.supplierEmail && <p className="text-sm text-gray-900">{invoice.supplierEmail}</p>}
-                    {invoice.supplierPhone && <p className="text-sm text-gray-900">{invoice.supplierPhone}</p>}
-                  </div>
-                </div>
-              )}
+                      {invoice.supplierAddress && (
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                          <h3 className="text-sm font-medium text-gray-900 mb-3">Supplier Information</h3>
+                          <div className="space-y-2">
+                            <p className="text-sm text-gray-600">{invoice.supplier}</p>
+                            <p className="text-sm text-gray-600">{invoice.supplierAddress}</p>
+                            {invoice.supplierEmail && <p className="text-sm text-gray-600">{invoice.supplierEmail}</p>}
+                            {invoice.supplierPhone && <p className="text-sm text-gray-600">{invoice.supplierPhone}</p>}
+                          </div>
+                        </div>
+                      )}
 
-              {invoice.items && invoice.items.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Line Items</h3>
-                  <div className="bg-gray-50 rounded-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Description
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Qty
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Unit Price
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Total
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {invoice.items.map((item, index) => (
-                          <tr key={index}>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {item.description}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                              {item.quantity}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                              ${item.unitPrice.toFixed(2)}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                              ${item.total.toFixed(2)}
-                            </td>
+                      {invoice.notes && (
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                          <h3 className="text-sm font-medium text-gray-900 mb-3">Notes</h3>
+                          <p className="text-sm text-gray-600">{invoice.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {activeTab === 'lineItems' && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Description
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Qty
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Unit Price
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Total
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                      <tfoot className="bg-gray-50">
-                        <tr>
-                          <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
-                            Subtotal
-                          </th>
-                          <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                            ${invoice.amount.toFixed(2)}
-                          </td>
-                        </tr>
-                        {invoice.tax && (
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {invoice.items.map((item, index) => (
+                            <tr key={index}>
+                              <td className="px-4 py-3 text-sm text-gray-900">
+                                {item.description}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                {item.quantity}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                ${item.unitPrice.toFixed(2)}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                ${item.total.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot className="bg-gray-50">
                           <tr>
                             <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
-                              Tax
+                              Subtotal
                             </th>
                             <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                              ${invoice.tax.toFixed(2)}
+                              ${invoice.amount.toFixed(2)}
                             </td>
                           </tr>
-                        )}
-                        <tr>
-                          <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
-                            Total
-                          </th>
-                          <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
-                            ${(invoice.total || invoice.amount).toFixed(2)}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {invoice.notes && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Notes</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-900">{invoice.notes}</p>
-                  </div>
-                </div>
-              )}
-
-              {invoice.approvalHistory && invoice.approvalHistory.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Approval History</h3>
-                  <div className="bg-gray-50 rounded-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            User
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Action
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Notes
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {invoice.approvalHistory.map((history, index) => (
-                          <tr key={index}>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {history.date}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {history.user}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${history.action === 'Approved' ? 'bg-green-100 text-green-800' : 
-                                  history.action === 'Flagged' ? 'bg-red-100 text-red-800' : 
-                                  'bg-yellow-100 text-yellow-800'}`}>
-                                {history.action}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {history.notes}
+                          {invoice.tax && (
+                            <tr>
+                              <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                                Tax
+                              </th>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                ${invoice.tax.toFixed(2)}
+                              </td>
+                            </tr>
+                          )}
+                          <tr>
+                            <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                              Total
+                            </th>
+                            <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
+                              ${(invoice.total || invoice.amount).toFixed(2)}
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+                  {activeTab === 'approvalHistory' && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              User
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Action
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Notes
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {invoice.approvalHistory.map((history, index) => (
+                            <tr key={index}>
+                              <td className="px-4 py-3 text-sm text-gray-900">
+                                {history.date}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900">
+                                {history.user}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900">
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                  ${history.action === 'Approved' ? 'bg-green-100 text-green-800' : 
+                                    history.action === 'Flagged' ? 'bg-red-100 text-red-800' : 
+                                    'bg-yellow-100 text-yellow-800'}`}>
+                                  {history.action}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900">
+                                {history.notes}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

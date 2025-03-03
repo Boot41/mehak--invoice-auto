@@ -16,7 +16,9 @@ export const mockInvoices = [
     amount: 1250.00,
     status: "Pending",
     confidence: "high",
-    confidenceIcon: "🟢"
+    confidenceIcon: "",
+    confidenceScore: 95,
+    numberOfUnits: 10
   },
   {
     id: 2,
@@ -27,7 +29,9 @@ export const mockInvoices = [
     amount: 750.50,
     status: "Approved",
     confidence: "high",
-    confidenceIcon: "🟢"
+    confidenceIcon: "",
+    confidenceScore: 90,
+    numberOfUnits: 5
   },
   {
     id: 3,
@@ -38,7 +42,9 @@ export const mockInvoices = [
     amount: 2500.00,
     status: "Flagged",
     confidence: "low",
-    confidenceIcon: "🔴"
+    confidenceIcon: "",
+    confidenceScore: 80,
+    numberOfUnits: 15
   },
   {
     id: 4,
@@ -49,7 +55,9 @@ export const mockInvoices = [
     amount: 1800.75,
     status: "Pending",
     confidence: "medium",
-    confidenceIcon: "🟡"
+    confidenceIcon: "",
+    confidenceScore: 85,
+    numberOfUnits: 8
   },
   {
     id: 5,
@@ -60,7 +68,9 @@ export const mockInvoices = [
     amount: 950.25,
     status: "Approved",
     confidence: "high",
-    confidenceIcon: "🟢"
+    confidenceIcon: "",
+    confidenceScore: 92,
+    numberOfUnits: 12
   },
   {
     id: 6,
@@ -71,7 +81,9 @@ export const mockInvoices = [
     amount: 3200.00,
     status: "Pending",
     confidence: "medium",
-    confidenceIcon: "🟡"
+    confidenceIcon: "",
+    confidenceScore: 88,
+    numberOfUnits: 20
   },
   {
     id: 7,
@@ -82,7 +94,9 @@ export const mockInvoices = [
     amount: 1500.50,
     status: "Approved",
     confidence: "high",
-    confidenceIcon: "🟢"
+    confidenceIcon: "",
+    confidenceScore: 96,
+    numberOfUnits: 18
   },
   {
     id: 8,
@@ -93,7 +107,9 @@ export const mockInvoices = [
     amount: 2100.25,
     status: "Flagged",
     confidence: "low",
-    confidenceIcon: "🔴"
+    confidenceIcon: "",
+    confidenceScore: 78,
+    numberOfUnits: 22
   }
 ];
 
@@ -113,7 +129,9 @@ export const mockInvoiceDetails = {
     total: 1350.00,
     status: "Pending",
     confidence: "high",
-    confidenceIcon: "🟢",
+    confidenceIcon: "",
+    confidenceScore: 95,
+    numberOfUnits: 10,
     items: [
       { description: "Product A", quantity: 5, unitPrice: 150.00, total: 750.00 },
       { description: "Service B", quantity: 2, unitPrice: 250.00, total: 500.00 }
@@ -136,7 +154,9 @@ export const mockInvoiceDetails = {
     total: 810.54,
     status: "Approved",
     confidence: "high",
-    confidenceIcon: "🟢",
+    confidenceIcon: "",
+    confidenceScore: 90,
+    numberOfUnits: 5,
     items: [
       { description: "Monthly Service", quantity: 1, unitPrice: 750.50, total: 750.50 }
     ],
@@ -160,7 +180,9 @@ export const mockInvoiceDetails = {
     total: 2700.00,
     status: "Flagged",
     confidence: "low",
-    confidenceIcon: "🔴",
+    confidenceIcon: "",
+    confidenceScore: 80,
+    numberOfUnits: 15,
     items: [
       { description: "Consulting Services", quantity: 10, unitPrice: 250.00, total: 2500.00 }
     ],

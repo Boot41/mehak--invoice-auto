@@ -59,15 +59,7 @@ User reviews extracted data and approves it with one click.
 
 ### **Backend**  
 - **Django** (Python) for the backend API.  
-- **PostgreSQL** for database storage.  
-
-### **AI/ML**  
-- **spaCy** for text processing.  
-- **OpenAI API** for summarization and follow-up email generation.  
-
-### **DevOps**  
-- **Docker** for containerization.  
-- **GitHub** for version control.  
+- **PostgreSQL** for database storage.     
 
 ---
 
