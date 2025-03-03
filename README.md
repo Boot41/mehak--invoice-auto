@@ -1,41 +1,53 @@
-# **AI Job Application Email Summarizer & Ghosting Tracker**  
+# **InvoiceAuto – AI-Powered Invoice Processing & Inventory Management**  
 
-Welcome to the **AI Job Application Email Summarizer & Ghosting Tracker**! This project is designed to help job seekers streamline their job application process by automatically summarizing job application emails, tracking application statuses, detecting ghosting, and providing AI-powered follow-up recommendations.
+InvoiceAuto is a cloud-native AI system designed to automate invoice processing and streamline inventory management. It integrates with email systems to auto-fetch invoices, leverages AI for intelligent data extraction, and enables human approval with minimal manual intervention.
 
 ---
 
-## **✨ Key Features**  
+## **🚀 Project Goals & Objectives**  
+**Primary Objectives:**  
+✅ Automate invoice ingestion from email attachments.  
+✅ Use AI to parse invoices, extract structured data, and validate accuracy.  
+✅ Enable a one-click approval workflow for human verification.  
+✅ Maintain an easy-to-use dashboard for invoice tracking.  
 
-### **1. Email Summarization**  
-- Automatically fetches job application emails from **Gmail/Outlook**.  
-- Uses **AI (spaCy/OpenAI API)** to extract key details:  
-  - **Applicant Name**  
-  - **Job Title**  
-  - **Company Name**  
-  - **Key Skills/Qualifications**  
-  - **Call to Action (Next Steps)**  
+**Secondary Objectives (Future Expansion):**  
+🔜 Automate inventory updates after approval.  
+🔜 Enable auto-reordering of supplies based on stock levels.  
+🔜 Generate reports and audit logs for financial insights.
 
-### **2. Application Tracking**  
-- Tracks the status of each job application:  
-  - **Applied**  
-  - **Interview Scheduled**  
-  - **Ghosted**  
-  - **Closed**  
-- Provides a **dashboard** to view all applications in one place.  
+## **💡 Hero Feature: AI-Powered Invoice Parsing & One-Click Approval**  
+**How It Works:**  
+Invoices (PDFs or images) are ingested via email.  
+AI extracts key invoice details (SKU, price, quantity, vendor).  
+User reviews extracted data and approves it with one click.
 
-### **3. Ghosting Detection**  
-- Detects if a job application has been **ghosted** by:  
-  - Checking if the job listing **still exists** (via web scraping).  
-  - Tracking the **time elapsed** since the last response.  
-- Sends **alerts** for ghosted applications.  
+## **📌 Core Functionalities**  
+**1️⃣ Invoice Ingestion**  
+📥 Auto-fetch invoices via email (Gmail API, IMAP/SMTP)  
+🖼️ Support for multiple formats: PDF, JPG, PNG  
+📝 Manual upload option for users who prefer direct uploads  
 
-### **4. AI-Powered Follow-Up Recommendations**  
-- Generates **personalized follow-up emails** using **OpenAI API**.  
-- Provides **one-click sending** for follow-ups.  
+**2️⃣ AI-Powered Parsing & Data Extraction**  
+🔍 Text extraction via OCR (Tesseract, AWS Textract, Google Vision AI)  
+🧠 AI-based invoice parsing (LLaVA at Groq – multimodal LLM)  
+📦 SKU detection & validation (Meta's SAM2 / OpenCV for object extraction)  
+⚠️ Confidence scores provided for extracted data  
 
-### **5. Job Success Insights**  
-- Tracks **which companies respond the most**.  
-- Shows **which job applications have the highest success rate**.  
+**3️⃣ Human Review & One-Click Approval**  
+👀 Users review parsed invoice data in a simple UI  
+✅ Accept / 🏷️ Edit / ❌ Reject invoices easily  
+♻️ Rollback mechanism for incorrect approvals  
+
+**4️⃣ Inventory Management (Future Expansion)**  
+📊 Automatic inventory updates post-approval  
+🔔 Stock level alerts for low inventory  
+📦 Supplier reordering automation via email notifications  
+
+**5️⃣ Notifications & Tracking**  
+📩 Email notifications for pending approvals  
+🔔 Push notifications via Firebase for urgent tasks  
+📜 Status tracking: Pending, Approved, Rejected  
 
 ---
 
@@ -71,8 +83,8 @@ Welcome to the **AI Job Application Email Summarizer & Ghosting Tracker**! This 
 
 1. **Clone the Repository**  
    ```bash  
-   git clone https://github.com/your-username/ai-job-application-tracker.git  
-   cd ai-job-application-tracker  
+   git clone https://github.com/your-username/invoiceauto.git  
+   cd invoiceauto  
    ```  
 
 2. **Set Up Backend**  
@@ -123,7 +135,7 @@ Welcome to the **AI Job Application Email Summarizer & Ghosting Tracker**! This 
 ## **📂 Project Structure**  
 
 ```  
-ai-job-application-tracker/  
+invoiceauto/  
 ├── backend/                  # Django backend  
 │   ├── manage.py  
 │   ├── requirements.txt  
@@ -150,7 +162,7 @@ Create a `.env` file in the `backend` folder with the following variables:
 # Django  
 SECRET_KEY=your-secret-key  
 DEBUG=True  
-DATABASE_URL=postgres://user:password@db:5432/jobtracker  
+DATABASE_URL=postgres://user:password@db:5432/invoiceauto  
 
 # Email API  
 GMAIL_API_KEY=your-gmail-api-key  
@@ -163,9 +175,9 @@ OPENAI_API_KEY=your-openai-api-key
 ---
 
 ## **📈 Future Enhancements**  
-- **Multi-platform integration** (LinkedIn, Indeed tracking).  
+- **Multi-platform integration** (QuickBooks, Xero, etc.).  
 - **Success prediction** using advanced AI models.  
-- **Refined job insights & analytics**.  
+- **Refined invoice insights & analytics**.  
 - **Mobile app** for on-the-go tracking.  
 
 ---
@@ -173,4 +185,4 @@ OPENAI_API_KEY=your-openai-api-key
 ## **🙏 Contributing**  
 Contributions are welcome! Please fork the repository and submit a pull request.  
 
-Happy job hunting! 🚀
+Happy automating! 🚀
