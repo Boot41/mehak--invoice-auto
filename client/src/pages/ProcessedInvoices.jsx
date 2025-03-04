@@ -237,7 +237,7 @@ function ProcessedInvoices() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredInvoices.length > 0 ? (
                 filteredInvoices.map((invoice) => {
-                  console.log(invoice); // Log the invoice data
+                  // console.log(invoice); // Log the invoice data
                   return (
                     <tr key={invoice.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">

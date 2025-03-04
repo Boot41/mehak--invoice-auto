@@ -142,28 +142,6 @@ invoiceauto/
 ├── docker-compose.yml        # Docker configuration  
 └── README.md  
 ```  
-
----
-
-## **🔧 Configuration**  
-
-### **Environment Variables**  
-Create a `.env` file in the `backend` folder with the following variables:  
-
-```  
-# Django  
-SECRET_KEY=your-secret-key  
-DEBUG=True  
-DATABASE_URL=postgres://user:password@db:5432/invoiceauto  
-
-# Email API  
-GMAIL_API_KEY=your-gmail-api-key  
-OUTLOOK_API_KEY=your-outlook-api-key  
-
-# OpenAI API  
-OPENAI_API_KEY=your-openai-api-key  
-```  
-
 ---
 
 ## **📈 Future Enhancements**  
