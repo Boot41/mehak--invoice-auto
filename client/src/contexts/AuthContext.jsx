@@ -115,7 +115,7 @@ export function AuthProvider({ children }) {
       
       const tokens = { access_token, refresh_token };
       updateTokens(tokens);
-      
+      localStorage.setItem('token', access_token); // Update AuthContext to store token in localStorage after login
       setCurrentUser(user);
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
       
