@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, ExternalLink, Eye } from 'lucide-react';
-import { getInvoices } from '../data/mockData';
+import { invoiceService } from '../services/api';
 
 function ProcessedInvoices() {
   const [invoices, setInvoices] = useState([]);
@@ -11,24 +11,38 @@ function ProcessedInvoices() {
   const [dateFilter, setDateFilter] = useState('');
   const [supplierFilter, setSupplierFilter] = useState('');
   const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Load invoices from localStorage
-    const loadedInvoices = getInvoices();
-    setInvoices(loadedInvoices);
-    setFilteredInvoices(loadedInvoices);
-    
-    // Extract unique suppliers for filter dropdown
-    const uniqueSuppliers = [...new Set(loadedInvoices.map(inv => inv.supplier))];
-    setSuppliers(uniqueSuppliers);
-    
-    // Check if there's a status filter in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const statusParam = urlParams.get('status');
-    if (statusParam) {
-      setStatusFilter(statusParam);
-      filterInvoices(loadedInvoices, searchTerm, statusParam, dateFilter, supplierFilter);
-    }
+    const fetchInvoices = async () => {
+      try {
+        setLoading(true);
+        const response = await invoiceService.getInvoices();
+        const loadedInvoices = response.results || [];
+        setInvoices(loadedInvoices);
+        setFilteredInvoices(loadedInvoices);
+        
+        // Extract unique suppliers for filter dropdown
+        const uniqueSuppliers = [...new Set(loadedInvoices.map(inv => inv.supplier))];
+        setSuppliers(uniqueSuppliers);
+        
+        // Check if there's a status filter in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const statusParam = urlParams.get('status');
+        if (statusParam) {
+          setStatusFilter(statusParam);
+          filterInvoices(loadedInvoices, searchTerm, statusParam, dateFilter, supplierFilter);
+        }
+      } catch (err) {
+        console.error('Error fetching invoices:', err);
+        setError('Failed to load invoices. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInvoices();
   }, []);
 
   const filterInvoices = (invoices, search, status, date, supplier) => {
@@ -38,7 +52,7 @@ function ProcessedInvoices() {
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(inv => 
-        inv.invoiceNumber.toLowerCase().includes(searchLower) ||
+        inv.invoice_number.toLowerCase().includes(searchLower) ||
         inv.supplier.toLowerCase().includes(searchLower)
       );
     }
@@ -50,7 +64,7 @@ function ProcessedInvoices() {
     
     // Apply date filter
     if (date) {
-      filtered = filtered.filter(inv => inv.date === date);
+      filtered = filtered.filter(inv => inv.date.startsWith(date));
     }
     
     // Apply supplier filter
@@ -60,6 +74,26 @@ function ProcessedInvoices() {
     
     setFilteredInvoices(filtered);
   };
+
+  useEffect(() => {
+    filterInvoices(invoices, searchTerm, statusFilter, dateFilter, supplierFilter);
+  }, [searchTerm, statusFilter, dateFilter, supplierFilter, invoices]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -91,10 +125,10 @@ function ProcessedInvoices() {
     const csvContent = [
       headers.join(','),
       ...filteredInvoices.map(inv => [
-        inv.invoiceNumber,
+        inv.invoice_number,
         inv.date,
         inv.supplier,
-        inv.amount.toFixed(2),
+        Number(inv.amount).toFixed(2),
         inv.status,
         inv.numberOfUnits
       ].join(','))
@@ -241,7 +275,7 @@ function ProcessedInvoices() {
                   return (
                     <tr key={invoice.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                        {invoice.invoiceNumber}
+                        {invoice.invoice_number}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                         {invoice.date}
@@ -250,7 +284,7 @@ function ProcessedInvoices() {
                         {invoice.supplier}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                        ${invoice.amount.toFixed(2)}
+                        ${Number(invoice.amount).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
