@@ -148,18 +148,14 @@ class InvoiceDetail(models.Model):
         return f"Details for {self.invoice.invoice_number}"
 
 class InvoiceItem(models.Model):
-    invoice_detail = models.ForeignKey(
-        InvoiceDetail,
-        on_delete=models.CASCADE,
-        related_name='items'
-    )
-    description = models.CharField(max_length=200)
-    quantity = models.IntegerField(validators=[MinValueValidator(1)])
+    description = models.CharField(max_length=255)
+    quantity = models.IntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=10, decimal_places=2)
+    invoice = models.ForeignKey('InvoiceInfo', related_name='items', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.description} - {self.invoice_detail.invoice.invoice_number}"
+        return f"{self.description} - {self.quantity} units"
 
 class ApprovalHistory(models.Model):
     invoice_detail = models.ForeignKey(
@@ -179,59 +175,40 @@ class ApprovalHistory(models.Model):
         verbose_name_plural = "Approval histories"
 
 class InvoiceInfo(models.Model):
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='invoice_infos')
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),
-        ('Flagged', 'Flagged'),
+        ('Rejected', 'Rejected')
     ]
-    
+
     CONFIDENCE_CHOICES = [
         ('high', 'High'),
         ('medium', 'Medium'),
-        ('low', 'Low'),
+        ('low', 'Low')
     ]
 
-    # Basic Invoice Information
-    invoice_number = models.CharField(max_length=20, unique=True)
+    invoice_number = models.CharField(max_length=50, unique=True)
     date = models.DateField()
-    due_date = models.DateField()
-    supplier = models.CharField(max_length=100)
+    due_date = models.DateField(null=True, blank=True)
+    supplier = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
-    confidence = models.CharField(max_length=10, choices=CONFIDENCE_CHOICES)
-    confidence_score = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    number_of_units = models.IntegerField(validators=[MinValueValidator(0)])
-
-    # Supplier Details
-    supplier_address = models.TextField()
-    supplier_email = models.EmailField()
-    supplier_phone = models.CharField(max_length=20)
-    
-    # Financial Details
-    tax = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    confidence = models.CharField(max_length=20, choices=CONFIDENCE_CHOICES)
+    confidence_score = models.IntegerField()
+    number_of_units = models.IntegerField()
+    supplier_address = models.TextField(blank=True)
+    supplier_email = models.EmailField(blank=True)
+    supplier_phone = models.CharField(max_length=20, blank=True)
+    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    # Additional Information
     notes = models.TextField(blank=True)
-    image_url = models.URLField(blank=True)
-    
-    # Timestamps
+    image_url = models.URLField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Invoice {self.invoice_number}"
+        return f"Invoice {self.invoice_number} - {self.supplier}"
 
     class Meta:
-        verbose_name = "Invoice Information"
-        verbose_name_plural = "Invoice Information"
         ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['invoice_number']),
-            models.Index(fields=['user']),
-            models.Index(fields=['status']),
-            models.Index(fields=['created_at']),
-        ]

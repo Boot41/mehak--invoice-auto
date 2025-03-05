@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, File, Check, X } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
-import { addInvoice } from '../data/mockData';
 
 function InvoiceUpload() {
   const [file, setFile] = useState(null);
@@ -40,40 +39,61 @@ function InvoiceUpload() {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!file) return;
     
     setIsUploading(true);
     
-    // Simulate processing delay
-    setTimeout(() => {
-      // Create a new invoice with mock data
-      const newInvoice = {
-        invoiceNumber: `INV-${Math.floor(Math.random() * 10000)}`,
-        date: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        supplier: "New Supplier",
-        amount: Math.floor(Math.random() * 2000) + 500,
-        status: "Pending",
-        confidence: Math.random() > 0.7 ? "high" : Math.random() > 0.4 ? "medium" : "low",
-        confidenceIcon: Math.random() > 0.7 ? "🟢" : Math.random() > 0.4 ? "🟡" : "🔴",
-        items: [
-          { description: "Product/Service", quantity: 1, unitPrice: Math.floor(Math.random() * 2000) + 500, total: Math.floor(Math.random() * 2000) + 500 }
-        ],
-        imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-      };
+    try {
+      // First upload the file to get the URL
+      const formData = new FormData();
+      formData.append('document', file);
+
+      const uploadResponse = await fetch('/api/upload-invoice/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const { url } = await uploadResponse.json();
+
+      // Now process the invoice using the URL
+      const processResponse = await fetch('/api/process-invoice/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ pdf_url: url }),
+      });
+
+      if (!processResponse.ok) {
+        throw new Error('Failed to process invoice');
+      }
+
+      const processedData = await processResponse.json();
       
-      // Add the invoice to storage
-      const savedInvoice = addInvoice(newInvoice);
+      // Store the processed data in localStorage
+      const invoiceId = processedData.invoice_id;
+      localStorage.setItem(`invoice_${invoiceId}`, JSON.stringify(processedData));
       
-      // Show notification
-      addNotification('Invoice uploaded successfully!', 'success');
+      // Show success notification
+      addNotification('Invoice uploaded and processed successfully!', 'success');
       
       // Navigate to review page
-      navigate(`/review/${savedInvoice.id}`);
-      
+      navigate(`/review/${invoiceId}`);
+    } catch (error) {
+      console.error('Error:', error);
+      addNotification(error.message || 'Failed to process invoice', 'error');
+    } finally {
       setIsUploading(false);
-    }, 2000);
+    }
   };
 
   const handleRemoveFile = () => {
