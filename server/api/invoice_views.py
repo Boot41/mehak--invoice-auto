@@ -4,8 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from .models import Invoice, InvoiceDetail, ApprovalHistory
-from .serializers import InvoiceSerializer, InvoiceDetailSerializer
+from .models import Invoice, InvoiceDetail, ApprovalHistory, InvoiceInfo
+from .serializers import InvoiceSerializer, InvoiceDetailSerializer, InvoiceInfoListSerializer, InvoiceInfoDetailSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 import boto3
 
@@ -74,22 +74,18 @@ def upload_invoice(request):
 def list_invoices(request):
     """
     List all invoices with pagination.
+    Returns basic invoice information: Invoice #, Date, Supplier, Amount, Status, Units
     """
     try:
-        if not request.user.is_authenticated:
-            return Response({'error': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # Prefetch related objects to avoid N+1 queries
-        invoices = Invoice.objects.select_related('details').filter(
-            user=request.user
-        ).order_by('-created_at')
+        # Get invoices for the authenticated user
+        invoices = InvoiceInfo.objects.filter(user=request.user).order_by('-created_at')
         
         # Initialize paginator
         paginator = StandardResultsSetPagination()
         paginated_invoices = paginator.paginate_queryset(invoices, request)
         
         # Serialize the paginated data
-        serializer = InvoiceSerializer(paginated_invoices, many=True)
+        serializer = InvoiceInfoListSerializer(paginated_invoices, many=True)
         
         return paginator.get_paginated_response(serializer.data)
     
@@ -103,18 +99,12 @@ def list_invoices(request):
 @permission_classes([IsAuthenticated])
 def get_invoice(request, id):
     """
-    Retrieve a single invoice by ID with all its details.
+    Retrieve detailed information for a specific invoice.
     """
     try:
-        invoice = get_object_or_404(Invoice, id=id, user=request.user)
-        serializer = InvoiceSerializer(invoice)
+        invoice = get_object_or_404(InvoiceInfo, id=id, user=request.user)
+        serializer = InvoiceInfoDetailSerializer(invoice)
         return Response(serializer.data)
-    
-    except Invoice.DoesNotExist:
-        return Response(
-            {'error': 'Invoice not found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
     except Exception as e:
         return Response(
             {'error': str(e)},
