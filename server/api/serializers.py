@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Invoice, InvoiceDetail, InvoiceItem, ApprovalHistory, User
+from .models import Invoice, InvoiceDetail, InvoiceItem, ApprovalHistory, User, InvoiceInfo
 from django.contrib.auth import get_user_model
 
 class UserSerializer(serializers.ModelSerializer):
@@ -40,6 +40,19 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'amount', 'status', 'confidence', 'confidence_score',
             'number_of_units', 'created_at', 'updated_at', 'details'
         ]
+
+class InvoiceInfoListSerializer(serializers.ModelSerializer):
+    """Serializer for listing invoices with basic information"""
+    class Meta:
+        model = InvoiceInfo
+        fields = ['id', 'invoice_number', 'date', 'supplier', 'amount', 'status', 'number_of_units']
+
+class InvoiceInfoDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed invoice information"""
+    class Meta:
+        model = InvoiceInfo
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
 
 class GoogleAuthSerializer(serializers.Serializer):
     email = serializers.EmailField()
