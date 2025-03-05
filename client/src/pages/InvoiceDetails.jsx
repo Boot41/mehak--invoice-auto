@@ -1,22 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Printer, Download } from 'lucide-react';
-import { getInvoiceById } from '../data/mockData';
+import axios from 'axios';
 
 function InvoiceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [invoice, setInvoice] = useState(null);
+  const [invoice, setInvoice] = useState({
+    id: '',
+    invoice_number: '',
+    date: '',
+    due_date: '',
+    supplier: '',
+    amount: 0,
+    status: '',
+    confidence: '',
+    confidence_score: 0,
+    number_of_units: 0,
+    supplier_address: '123 Business Street, City, Country',
+    supplier_email: '',
+    supplier_phone: '+1 (555) 123-4567',
+    tax: 0,
+    total: 0,
+    notes: '',
+    image_url: '',
+    created_at: '',
+    updated_at: '',
+    user: null,
+    items: [
+      {
+        description: 'Product A',
+        quantity: 2,
+        unitPrice: 300.00,
+        total: 600.00
+      },
+      {
+        description: 'Product B',
+        quantity: 4,
+        unitPrice: 150.00,
+        total: 600.00
+      }
+    ],
+    approvalHistory: []
+  });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
 
   useEffect(() => {
-    // Load invoice data
-    const invoiceData = getInvoiceById(parseInt(id));
-    if (invoiceData) {
-      setInvoice(invoiceData);
-    }
-    setLoading(false);
+    const fetchInvoice = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/invoices/${id}/`);
+        const processedData = {
+          ...response.data,
+          amount: parseFloat(response.data.amount) || 0,
+          tax: parseFloat(response.data.tax) || 0,
+          total: parseFloat(response.data.total) || 0,
+          confidence_score: parseInt(response.data.confidence_score) || 0,
+          number_of_units: parseInt(response.data.number_of_units) || 0,
+          supplier_address: response.data.supplier_address || '123 Business Street, City, Country',
+          supplier_phone: response.data.supplier_phone || '+1 (555) 123-4567'
+        };
+        
+        setInvoice(prev => ({
+          ...processedData,
+          items: prev.items
+        }));
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching invoice:', error);
+      }
+    };
+
+    fetchInvoice();
   }, [id]);
 
   const handlePrint = () => {
@@ -83,7 +138,7 @@ function InvoiceDetails() {
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">
-              Invoice #{invoice.invoiceNumber}
+              Invoice #{invoice.invoice_number}
             </h1>
             <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
               ${invoice.status === 'Approved' ? 'bg-green-100 text-green-800' : 
@@ -101,7 +156,7 @@ function InvoiceDetails() {
               <h2 className="text-lg font-medium text-gray-900 mb-4">Invoice Preview</h2>
               <div className="border rounded-lg overflow-hidden">
                 <img
-                  src={invoice.imageUrl}
+                  src={invoice.image_url}
                   alt="Invoice preview"
                   className="w-full object-contain"
                 />
@@ -156,7 +211,7 @@ function InvoiceDetails() {
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                           <p className="text-sm font-medium text-gray-500">Invoice Number</p>
-                          <p className="mt-1 text-sm text-gray-900">{invoice.invoiceNumber}</p>
+                          <p className="mt-1 text-sm text-gray-900">{invoice.invoice_number}</p>
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                           <p className="text-sm font-medium text-gray-500">Invoice Date</p>
@@ -164,18 +219,18 @@ function InvoiceDetails() {
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                           <p className="text-sm font-medium text-gray-500">Due Date</p>
-                          <p className="mt-1 text-sm text-gray-900">{invoice.dueDate}</p>
+                          <p className="mt-1 text-sm text-gray-900">{invoice.due_date}</p>
                         </div>
                       </div>
 
-                      {invoice.supplierAddress && (
+                      {invoice.supplier_address && (
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                           <h3 className="text-sm font-medium text-gray-900 mb-3">Supplier Information</h3>
                           <div className="space-y-2">
                             <p className="text-sm text-gray-600">{invoice.supplier}</p>
-                            <p className="text-sm text-gray-600">{invoice.supplierAddress}</p>
-                            {invoice.supplierEmail && <p className="text-sm text-gray-600">{invoice.supplierEmail}</p>}
-                            {invoice.supplierPhone && <p className="text-sm text-gray-600">{invoice.supplierPhone}</p>}
+                            <p className="text-sm text-gray-600">{invoice.supplier_address}</p>
+                            {invoice.supplier_email && <p className="text-sm text-gray-600">{invoice.supplier_email}</p>}
+                            {invoice.supplier_phone && <p className="text-sm text-gray-600">{invoice.supplier_phone}</p>}
                           </div>
                         </div>
                       )}
@@ -234,22 +289,20 @@ function InvoiceDetails() {
                               ${invoice.amount.toFixed(2)}
                             </td>
                           </tr>
-                          {invoice.tax && (
-                            <tr>
-                              <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
-                                Tax
-                              </th>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                ${invoice.tax.toFixed(2)}
-                              </td>
-                            </tr>
-                          )}
+                          <tr>
+                            <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
+                              Tax
+                            </th>
+                            <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                              ${invoice.tax.toFixed(2)}
+                            </td>
+                          </tr>
                           <tr>
                             <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
                               Total
                             </th>
-                            <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
-                              ${(invoice.total || invoice.amount).toFixed(2)}
+                            <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                              ${invoice.total.toFixed(2)}
                             </td>
                           </tr>
                         </tfoot>
@@ -275,29 +328,31 @@ function InvoiceDetails() {
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {invoice.approvalHistory.map((history, index) => (
-                            <tr key={index}>
-                              <td className="px-4 py-3 text-sm text-gray-900">
-                                {history.date}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
-                                {history.user}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                  ${history.action === 'Approved' ? 'bg-green-100 text-green-800' : 
-                                    history.action === 'Flagged' ? 'bg-red-100 text-red-800' : 
-                                    'bg-yellow-100 text-yellow-800'}`}>
+                        {invoice.approvalHistory && invoice.approvalHistory.length > 0 ? (
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {invoice.approvalHistory.map((history, index) => (
+                              <tr key={index}>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {history.user}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
                                   {history.action}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
-                                {history.notes}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {history.notes}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        ) : (
+                          <tbody>
+                            <tr>
+                              <td colSpan="4" className="px-4 py-3 text-sm text-gray-500 text-center">
+                                No approval history available
                               </td>
                             </tr>
-                          ))}
-                        </tbody>
+                          </tbody>
+                        )}
                       </table>
                     </div>
                   )}
