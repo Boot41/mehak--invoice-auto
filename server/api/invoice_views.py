@@ -19,7 +19,13 @@ def list_invoices(request):
     List all invoices with pagination.
     """
     try:
-        invoices = Invoice.objects.filter(user=request.user).order_by('-created_at')
+        if not request.user.is_authenticated:
+            return Response({'error': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Prefetch related objects to avoid N+1 queries
+        invoices = Invoice.objects.select_related('details').filter(
+            user=request.user
+        ).order_by('-created_at')
         
         # Initialize paginator
         paginator = StandardResultsSetPagination()

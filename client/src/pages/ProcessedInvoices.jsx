@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ExternalLink, Eye } from 'lucide-react';
+import { Search, Filter, ExternalLink, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { invoiceService } from '../services/api';
 
 function ProcessedInvoices() {
@@ -13,27 +13,26 @@ function ProcessedInvoices() {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [nextPage, setNextPage] = useState(null);
+  const [prevPage, setPrevPage] = useState(null);
 
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
         setLoading(true);
-        const response = await invoiceService.getInvoices();
+        const response = await invoiceService.getInvoices(page);
         const loadedInvoices = response.results || [];
         setInvoices(loadedInvoices);
+        setTotalCount(response.count);
+        setNextPage(response.next);
+        setPrevPage(response.previous);
         setFilteredInvoices(loadedInvoices);
-        
+
         // Extract unique suppliers for filter dropdown
         const uniqueSuppliers = [...new Set(loadedInvoices.map(inv => inv.supplier))];
         setSuppliers(uniqueSuppliers);
-        
-        // Check if there's a status filter in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const statusParam = urlParams.get('status');
-        if (statusParam) {
-          setStatusFilter(statusParam);
-          filterInvoices(loadedInvoices, searchTerm, statusParam, dateFilter, supplierFilter);
-        }
       } catch (err) {
         console.error('Error fetching invoices:', err);
         setError('Failed to load invoices. Please try again later.');
@@ -43,9 +42,48 @@ function ProcessedInvoices() {
     };
 
     fetchInvoices();
-  }, []);
+  }, [page]);
+
+  const handlePagination = async (direction) => {
+    let url;
+    if (direction === 'next' && nextPage) {
+        url = nextPage;
+    } else if (direction === 'prev' && prevPage) {
+        url = prevPage;
+    }
+    if (url) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                } else {
+                    throw new Error('Network response was not ok');
+                }
+            }
+            const data = await response.json();
+            setInvoices(data.results || []);
+            setNextPage(data.next);
+            setPrevPage(data.previous);
+            setTotalCount(data.count);
+        } catch (error) {
+            console.error('Error fetching invoices:', error);
+            setError('Failed to load invoices. Please try again later.');
+        }
+    }
+};
 
   const filterInvoices = (invoices, search, status, date, supplier) => {
+    if (!Array.isArray(invoices)) return [];
     let filtered = [...invoices];
     
     // Apply search filter
@@ -254,7 +292,7 @@ function ProcessedInvoices() {
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Supplier
                 </th>
-                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -295,7 +333,7 @@ function ProcessedInvoices() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                        {invoice.numberOfUnits}
+                        {invoice.number_of_units}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                         <Link
@@ -320,9 +358,29 @@ function ProcessedInvoices() {
           </table>
         </div>
 
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            Showing {filteredInvoices.length} of {invoices.length} invoices
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-center items-center">
+          {/* <div className="text-sm text-gray-500">
+            Showing {filteredInvoices.length} of {totalCount} invoices
+          </div> */}
+          <div className="flex justify-center items-center space-x-4">
+            <button
+              onClick={() => handlePagination('prev')}
+              disabled={!prevPage}
+              className={`flex items-center px-4 py-2 rounded ${
+                !prevPage ? 'bg-gray-400 cursor-not-allowed text-black' : 'bg-blue-600 text-white hover:bg-blue-700 '
+              }`}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+            </button>
+            <button
+              onClick={() => handlePagination('next')}
+              disabled={!nextPage}
+              className={`flex items-center px-4 py-2 rounded ${
+                !nextPage ? 'bg-gray-400 cursor-not-allowed text-black' : 'bg-blue-600 text-white hover:bg-blue-700 '
+              }`}
+            >
+              Next <ChevronRight className="h-4 w-4 ml-1" />
+            </button>
           </div>
         </div>
       </div>
