@@ -177,3 +177,61 @@ class ApprovalHistory(models.Model):
 
     class Meta:
         verbose_name_plural = "Approval histories"
+
+class InvoiceInfo(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='invoice_infos')
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Flagged', 'Flagged'),
+    ]
+    
+    CONFIDENCE_CHOICES = [
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+    ]
+
+    # Basic Invoice Information
+    invoice_number = models.CharField(max_length=20, unique=True)
+    date = models.DateField()
+    due_date = models.DateField()
+    supplier = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    confidence = models.CharField(max_length=10, choices=CONFIDENCE_CHOICES)
+    confidence_score = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    number_of_units = models.IntegerField(validators=[MinValueValidator(0)])
+
+    # Supplier Details
+    supplier_address = models.TextField()
+    supplier_email = models.EmailField()
+    supplier_phone = models.CharField(max_length=20)
+    
+    # Financial Details
+    tax = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Additional Information
+    notes = models.TextField(blank=True)
+    image_url = models.URLField(blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Invoice {self.invoice_number}"
+
+    class Meta:
+        verbose_name = "Invoice Information"
+        verbose_name_plural = "Invoice Information"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['invoice_number']),
+            models.Index(fields=['user']),
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+        ]

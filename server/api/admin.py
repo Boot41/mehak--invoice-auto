@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import User, Invoice, InvoiceDetail, InvoiceItem, ApprovalHistory
+from .models import User, Invoice, InvoiceDetail, InvoiceItem, ApprovalHistory, InvoiceInfo
 
 # Register your models here.
 
@@ -47,3 +47,31 @@ class ApprovalHistoryAdmin(admin.ModelAdmin):
     list_display = ('invoice_detail', 'date', 'user', 'action')
     list_filter = ('action', 'date')
     search_fields = ('invoice_detail__invoice__invoice_number', 'user__email')
+
+@admin.register(InvoiceInfo)
+class InvoiceInfoAdmin(admin.ModelAdmin):
+    list_display = ('invoice_number', 'supplier', 'amount', 'status', 'date', 'due_date')
+    list_filter = ('status', 'confidence', 'supplier')
+    search_fields = ('invoice_number', 'supplier', 'supplier_email')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('user', 'invoice_number', 'date', 'due_date', 'supplier')
+        }),
+        ('Financial Details', {
+            'fields': ('amount', 'tax', 'total', 'number_of_units')
+        }),
+        ('Status and Confidence', {
+            'fields': ('status', 'confidence', 'confidence_score')
+        }),
+        ('Supplier Details', {
+            'fields': ('supplier_address', 'supplier_email', 'supplier_phone')
+        }),
+        ('Additional Information', {
+            'fields': ('notes', 'image_url')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
