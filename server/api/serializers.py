@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from .models import Invoice, InvoiceDetail, InvoiceItem, ApprovalHistory
+from .models import Invoice, InvoiceDetail, InvoiceItem, ApprovalHistory, User
+from django.contrib.auth import get_user_model
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'email', 'first_name', 'last_name', 'picture']
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
     class Meta:
