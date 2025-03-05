@@ -6,11 +6,68 @@ from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from .models import Invoice, InvoiceDetail, ApprovalHistory
 from .serializers import InvoiceSerializer, InvoiceDetailSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+import boto3
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
+
+AWS_BUCKET_NAME = "invoice-auto-12"
+AWS_REGION = "ap-south-1"
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id="AKIA34AMDGM567KHYA6Q",
+    aws_secret_access_key="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",
+    region_name=AWS_REGION,
+)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_invoice(request):
+    parser_classes = (MultiPartParser, FormParser)
+    try:
+        if 'document' not in request.FILES:
+            return Response(
+                {'error': 'No pdf file provided'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        doc_file = request.FILES['document']
+        # Generate a unique filename to avoid conflicts
+        #file_extension = os.path.splitext(image_file.name)[1]
+        #unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}{file_extension}"
+        doc_key = f"{doc_file.name}"
+
+        try:
+            s3_client.upload_fileobj(
+                doc_file,
+                AWS_BUCKET_NAME,
+                doc_key
+                
+            )
+            
+            doc_url = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{doc_key}"
+            return Response({
+                'url': doc_url,
+                'message': 'Document uploaded successfully'
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            logger.error(f"Error uploading to S3: {str(e)}")
+            return Response(
+                {'error': 'Failed to upload image'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

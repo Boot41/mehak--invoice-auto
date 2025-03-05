@@ -14,4 +14,5 @@ urlpatterns = [
     path('invoices/<int:id>/', invoice_views.get_invoice, name='get_invoice'),
     path('invoices/approve/<int:id>/', invoice_views.approve_invoice, name='approve_invoice'),
     path('process-invoice/', invoice_views.process_invoice, name='process_invoice'),
+    path('upload-invoice/', invoice_views.upload_invoice, name='upload_invoice'),
 ]
