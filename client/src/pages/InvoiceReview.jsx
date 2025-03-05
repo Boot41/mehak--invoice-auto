@@ -1,252 +1,172 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Check, X, AlertTriangle, Edit2 } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
-import { getInvoiceById, updateInvoice } from '../data/mockData';
 
 function InvoiceReview() {
+  const [invoice, setInvoice] = useState(null);
+  const [isApproving, setIsApproving] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const [invoice, setInvoice] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    // Load invoice data
-    const invoiceData = getInvoiceById(parseInt(id));
-    if (invoiceData) {
-      setInvoice(invoiceData);
-      setFormData({
-        supplier: invoiceData.supplier,
-        invoiceNumber: invoiceData.invoiceNumber,
-        date: invoiceData.date,
-        dueDate: invoiceData.dueDate,
-        amount: invoiceData.amount,
-      });
+    // Load invoice data from localStorage
+    const data = localStorage.getItem(`invoice_${id}`);
+    if (data) {
+      setInvoice(JSON.parse(data));
+    } else {
+      addNotification('Invoice data not found', 'error');
+      navigate('/');
     }
-    setLoading(false);
-  }, [id]);
+  }, [id, navigate, addNotification]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === 'amount' ? parseFloat(value) || 0 : value,
-    });
-  };
-
-  const handleApprove = () => {
-    if (!invoice) return;
-    
-    // Update invoice with form data and change status
-    const updatedInvoice = {
-      ...invoice,
-      ...formData,
-      status: 'Approved',
-      approvalHistory: [
-        ...(invoice.approvalHistory || []),
-        {
-          date: new Date().toISOString().split('T')[0],
-          user: 'John Doe',
-          action: 'Approved',
-          notes: 'Approved after review',
+  const handleApprove = async () => {
+    setIsApproving(true);
+    try {
+      const response = await fetch('/api/approve-invoice/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-      ],
-    };
-    
-    updateInvoice(updatedInvoice);
-    addNotification('Invoice approved successfully!', 'success');
-    navigate('/');
-  };
+        body: JSON.stringify({
+          invoice_id: id,
+          ...invoice
+        }),
+      });
 
-  const handleFlag = () => {
-    if (!invoice) return;
-    
-    // Update invoice with form data and change status
-    const updatedInvoice = {
-      ...invoice,
-      ...formData,
-      status: 'Flagged',
-      approvalHistory: [
-        ...(invoice.approvalHistory || []),
-        {
-          date: new Date().toISOString().split('T')[0],
-          user: 'John Doe',
-          action: 'Flagged',
-          notes: 'Flagged for review',
-        },
-      ],
-    };
-    
-    updateInvoice(updatedInvoice);
-    addNotification('Invoice flagged for further review', 'info');
-    navigate('/');
-  };
+      if (!response.ok) {
+        throw new Error('Failed to approve invoice');
+      }
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+      // Clear the invoice data from localStorage
+      localStorage.removeItem(`invoice_${id}`);
+      
+      addNotification('Invoice approved successfully!', 'success');
+      navigate('/processed');
+    } catch (error) {
+      console.error('Error:', error);
+      addNotification(error.message || 'Failed to approve invoice', 'error');
+    } finally {
+      setIsApproving(false);
+    }
+  };
 
   if (!invoice) {
-    return (
-      <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Invoice Not Found</h1>
-        <p className="mt-2 text-gray-500">The invoice you're looking for doesn't exist.</p>
-        <button
-          onClick={() => navigate('/')}
-          className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Return to Dashboard
-        </button>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Review Invoice</h1>
-            <div className="flex items-center">
-              <span className="mr-2 text-sm text-gray-500">Confidence:</span>
-              <span className="text-2xl" title={invoice.confidence}>
-                {invoice.confidenceIcon}
-              </span>
-            </div>
-          </div>
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900">Review Invoice</h2>
         </div>
 
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Invoice Preview */}
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Invoice Preview</h2>
-              <div className="border rounded-lg overflow-hidden">
-                <img
-                  src={invoice.imageUrl}
-                  alt="Invoice preview"
-                  className="w-full object-contain"
-                />
-              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Invoice Details</h3>
+              <dl className="grid grid-cols-2 gap-4">
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Invoice Number</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{invoice.invoice_number}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Date</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{invoice.date}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Due Date</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{invoice.due_date || 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Amount</dt>
+                  <dd className="mt-1 text-sm text-gray-900">${invoice.amount}</dd>
+                </div>
+              </dl>
             </div>
 
-            {/* Extracted Data */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Extracted Data</h2>
-                <button
-                  type="button"
-                  onClick={() => setEditMode(!editMode)}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Edit2 className="h-3 w-3 mr-1" />
-                  {editMode ? 'Cancel Edit' : 'Edit Fields'}
-                </button>
-              </div>
-
-              <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Supplier Information</h3>
+              <dl className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Supplier</label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      name="supplier"
-                      value={formData.supplier}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-sm text-gray-900">{invoice.supplier}</p>
-                  )}
+                  <dt className="text-sm font-medium text-gray-500">Name</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{invoice.supplier}</dd>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Invoice Number</label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      name="invoiceNumber"
-                      value={formData.invoiceNumber}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-sm text-gray-900">{invoice.invoiceNumber}</p>
-                  )}
+                  <dt className="text-sm font-medium text-gray-500">Email</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{invoice.supplier_email || 'N/A'}</dd>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Invoice Date</label>
-                  {editMode ? (
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-sm text-gray-900">{invoice.date}</p>
-                  )}
+                  <dt className="text-sm font-medium text-gray-500">Phone</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{invoice.supplier_phone || 'N/A'}</dd>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Due Date</label>
-                  {editMode ? (
-                    <input
-                      type="date"
-                      name="dueDate"
-                      value={formData.dueDate}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-sm text-gray-900">{invoice.dueDate}</p>
-                  )}
+                  <dt className="text-sm font-medium text-gray-500">Address</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{invoice.supplier_address || 'N/A'}</dd>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Amount</label>
-                  {editMode ? (
-                    <input
-                      type="number"
-                      name="amount"
-                      value={formData.amount}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-sm text-gray-900">${invoice.amount.toFixed(2)}</p>
-                  )}
-                </div>
-              </div>
+              </dl>
             </div>
           </div>
+
+          {invoice.line_items && invoice.line_items.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Line Items</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                      <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                      <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                      <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {invoice.line_items.map((item, index) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.description}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{item.quantity}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${item.unit_price}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${item.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan="3" className="px-6 py-4 text-sm font-medium text-gray-900 text-right">Subtotal</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${invoice.amount}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="3" className="px-6 py-4 text-sm font-medium text-gray-900 text-right">Tax</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${invoice.tax}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="3" className="px-6 py-4 text-sm font-medium text-gray-900 text-right">Total</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">${invoice.total}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div className="mt-8 flex justify-end space-x-4">
             <button
               type="button"
-              onClick={handleFlag}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={() => navigate('/')}
             >
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              Flag for Review
+              Cancel
             </button>
             <button
               type="button"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               onClick={handleApprove}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              disabled={isApproving}
             >
-              <Check className="h-4 w-4 mr-2" />
-              Approve Invoice
+              {isApproving ? 'Approving...' : 'Approve Invoice'}
             </button>
           </div>
         </div>

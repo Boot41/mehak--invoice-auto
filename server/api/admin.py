@@ -37,22 +37,16 @@ class InvoiceDetailAdmin(admin.ModelAdmin):
     list_display = ('invoice', 'supplier_email', 'total')
     search_fields = ('invoice__invoice_number', 'supplier_email')
 
-@admin.register(InvoiceItem)
-class InvoiceItemAdmin(admin.ModelAdmin):
-    list_display = ('description', 'quantity', 'unit_price', 'total')
-    search_fields = ('description', 'invoice_detail__invoice__invoice_number')
-
-@admin.register(ApprovalHistory)
-class ApprovalHistoryAdmin(admin.ModelAdmin):
-    list_display = ('invoice_detail', 'date', 'user', 'action')
-    list_filter = ('action', 'date')
-    search_fields = ('invoice_detail__invoice__invoice_number', 'user__email')
+class InvoiceItemInline(admin.TabularInline):
+    model = InvoiceItem
+    extra = 0
 
 @admin.register(InvoiceInfo)
 class InvoiceInfoAdmin(admin.ModelAdmin):
-    list_display = ('invoice_number', 'supplier', 'amount', 'status', 'date', 'due_date')
-    list_filter = ('status', 'confidence', 'supplier')
-    search_fields = ('invoice_number', 'supplier', 'supplier_email')
+    list_display = ('invoice_number', 'supplier', 'date', 'total', 'status')
+    list_filter = ('status', 'date')
+    search_fields = ('invoice_number', 'supplier')
+    inlines = [InvoiceItemInline]
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         ('Basic Information', {
@@ -75,3 +69,14 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+@admin.register(InvoiceItem)
+class InvoiceItemAdmin(admin.ModelAdmin):
+    list_display = ('invoice', 'description', 'quantity', 'unit_price', 'total')
+    search_fields = ('description', 'invoice__invoice_number')
+
+@admin.register(ApprovalHistory)
+class ApprovalHistoryAdmin(admin.ModelAdmin):
+    list_display = ('invoice_detail', 'date', 'user', 'action')
+    list_filter = ('action', 'date')
+    search_fields = ('invoice_detail__invoice__invoice_number', 'user__email')
