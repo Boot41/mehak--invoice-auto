@@ -200,7 +200,8 @@ def approve_invoice(request):
 
         return Response({
             'message': 'Invoice approved successfully',
-            'invoice_number': invoice.invoice_number
+            'invoice_number': invoice.invoice_number,
+            'id': invoice.id
         })
 
     except Exception as e:

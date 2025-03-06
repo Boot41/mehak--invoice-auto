@@ -39,6 +39,38 @@ function InvoiceUpload() {
     fileInputRef.current.click();
   };
 
+  // Function to check if invoice qualifies for auto-approval
+  const checkAutoApproval = (invoiceData) => {
+    const amount = parseFloat(invoiceData.amount);
+    const units = parseInt(invoiceData.number_of_units);
+    return amount < 200 && units < 5;
+  };
+
+  // Function to auto-approve invoice
+  const autoApproveInvoice = async (invoiceData) => {
+    try {
+      const response = await fetch('/api/approve-invoice/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(invoiceData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to auto-approve invoice');
+      }
+
+      const result = await response.json();
+      addNotification('Invoice auto-approved successfully!', 'success');
+      return result;
+    } catch (error) {
+      console.error('Auto-approval error:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!file) return;
     
@@ -79,14 +111,33 @@ function InvoiceUpload() {
 
       const processedData = await processResponse.json();
       
-      // Store the processed data in localStorage
+      // Check if invoice qualifies for auto-approval
+      if (checkAutoApproval(processedData)) {
+        try {
+          // Attempt to auto-approve the invoice
+          const approvalResult = await autoApproveInvoice(processedData);
+          
+          // Store the approved invoice data
+          localStorage.setItem(`invoice_${approvalResult.id}`, JSON.stringify({
+            ...processedData,
+            status: 'Approved',
+            id: approvalResult.id
+          }));
+          
+          // Navigate to invoice details page using the ID from the response
+          navigate(`/invoice/${approvalResult.id}`);
+          return;
+        } catch (error) {
+          // If auto-approval fails, continue with manual review
+          console.warn('Auto-approval failed, continuing with manual review:', error);
+          addNotification('Auto-approval failed, please review the invoice manually', 'warning');
+        }
+      }
+      
+      // If not auto-approved or auto-approval failed, continue with manual review
       const invoiceId = processedData.invoice_id;
       localStorage.setItem(`invoice_${invoiceId}`, JSON.stringify(processedData));
-      
-      // Show success notification
-      addNotification('Invoice uploaded and processed successfully!', 'success');
-      
-      // Navigate to review page
+      addNotification('Invoice uploaded and ready for review', 'success');
       navigate(`/review/${invoiceId}`);
     } catch (error) {
       console.error('Error:', error);
@@ -200,23 +251,24 @@ function InvoiceUpload() {
             </button>
             <button
               type="button"
-              className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`ml-4 px-4 py-2 rounded-md text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                file && !isUploading
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-gray-300 cursor-not-allowed'
+              }`}
               onClick={handleSubmit}
               disabled={!file || isUploading}
             >
               {isUploading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Processing...
-                </>
+                </span>
               ) : (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Submit for Processing
-                </>
+                'Upload and Process'
               )}
             </button>
           </div>
