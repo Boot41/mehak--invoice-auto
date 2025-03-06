@@ -27,21 +27,7 @@ function InvoiceDetails() {
     created_at: '',
     updated_at: '',
     user: null,
-    items: [
-      {
-        description: 'Product A',
-        quantity: 2,
-        unitPrice: 300.00,
-        total: 600.00
-      },
-      {
-        description: 'Product B',
-        quantity: 4,
-        unitPrice: 150.00,
-        total: 600.00
-      }
-    ],
-    approvalHistory: []
+    line_items: []
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
@@ -58,13 +44,11 @@ function InvoiceDetails() {
           confidence_score: parseInt(response.data.confidence_score) || 0,
           number_of_units: parseInt(response.data.number_of_units) || 0,
           supplier_address: response.data.supplier_address || '123 Business Street, City, Country',
-          supplier_phone: response.data.supplier_phone || '+1 (555) 123-4567'
+          supplier_phone: response.data.supplier_phone || '+1 (555) 123-4567',
+          line_items: response.data.line_items || []
         };
         
-        setInvoice(prev => ({
-          ...processedData,
-          items: prev.items
-        }));
+        setInvoice(processedData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching invoice:', error);
@@ -244,69 +228,41 @@ function InvoiceDetails() {
                     </div>
                   )}
                   {activeTab === 'lineItems' && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Description
-                            </th>
-                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Qty
-                            </th>
-                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Unit Price
-                            </th>
-                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Total
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {invoice.items.map((item, index) => (
-                            <tr key={index}>
-                              <td className="px-4 py-3 text-sm text-gray-900">
-                                {item.description}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                {item.quantity}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                ${item.unitPrice.toFixed(2)}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                ${item.total.toFixed(2)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot className="bg-gray-50">
-                          <tr>
-                            <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
-                              Subtotal
-                            </th>
-                            <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                              ${invoice.amount.toFixed(2)}
-                            </td>
-                          </tr>
-                          <tr>
-                            <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
-                              Tax
-                            </th>
-                            <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                              ${invoice.tax.toFixed(2)}
-                            </td>
-                          </tr>
-                          <tr>
-                            <th scope="row" colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 text-right">
-                              Total
-                            </th>
-                            <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                              ${invoice.total.toFixed(2)}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
+                    <div className="space-y-4">
+                      {invoice.line_items && invoice.line_items.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {invoice.line_items.map((item, index) => (
+                                <tr key={item.id || index}>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.description}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.quantity}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(item.unit_price).toFixed(2)}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(item.total).toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot className="bg-gray-50">
+                              <tr>
+                                <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-900">Total</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(invoice.total).toFixed(2)}</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          No line items provided for this invoice.
+                        </div>
+                      )}
                     </div>
                   )}
                   {activeTab === 'approvalHistory' && (
@@ -348,7 +304,7 @@ function InvoiceDetails() {
                           <tbody>
                             <tr>
                               <td colSpan="4" className="px-4 py-3 text-sm text-gray-500 text-center">
-                                No approval history available
+                                Soon to be added feature!!
                               </td>
                             </tr>
                           </tbody>
