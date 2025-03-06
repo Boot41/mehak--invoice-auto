@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios'; // Import axios
 import { useNotifications } from '../contexts/NotificationContext';
 
 function InvoiceReview() {
@@ -23,30 +24,30 @@ function InvoiceReview() {
   const handleApprove = async () => {
     setIsApproving(true);
     try {
-      const response = await fetch('/api/approve-invoice/', {
-        method: 'POST',
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/approve-invoice/`, {
+        invoice_id: id,
+        ...invoice,
+        image_url: invoice.image_url // Ensure image_url is included
+      }, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          invoice_id: id,
-          ...invoice
-        }),
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
 
       if (!response.ok) {
         throw new Error('Failed to approve invoice');
       }
 
+      const result = response.data;
+      
       // Clear the invoice data from localStorage
       localStorage.removeItem(`invoice_${id}`);
       
       addNotification('Invoice approved successfully!', 'success');
-      navigate('/processed');
+      navigate(`/invoice/${result.id}`); // Navigate to invoice details instead of processed list
     } catch (error) {
       console.error('Error:', error);
-      addNotification(error.message || 'Failed to approve invoice', 'error');
+      addNotification(error.response?.data?.message || 'Failed to approve invoice', 'error');
     } finally {
       setIsApproving(false);
     }

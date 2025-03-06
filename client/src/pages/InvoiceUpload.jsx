@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, File, Check, X } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
+import axios from 'axios';
 
 function InvoiceUpload() {
   const [file, setFile] = useState(null);
@@ -49,22 +50,14 @@ function InvoiceUpload() {
   // Function to auto-approve invoice
   const autoApproveInvoice = async (invoiceData) => {
     try {
-      const response = await fetch('/api/approve-invoice/', {
-        method: 'POST',
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/approve-invoice/`, invoiceData, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(invoiceData),
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to auto-approve invoice');
-      }
-
-      const result = await response.json();
       addNotification('Invoice auto-approved successfully!', 'success');
-      return result;
+      return response.data;
     } catch (error) {
       console.error('Auto-approval error:', error);
       throw error;
@@ -81,40 +74,31 @@ function InvoiceUpload() {
       const formData = new FormData();
       formData.append('document', file);
 
-      const uploadResponse = await fetch('/api/upload-invoice/', {
-        method: 'POST',
-        body: formData,
+      const uploadResponse = await axios.post(`${import.meta.env.VITE_API_URL}/upload-invoice/`, formData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file');
-      }
-
-      const { url } = await uploadResponse.json();
+      const { url } = uploadResponse.data;
 
       // Now process the invoice using the URL
-      const processResponse = await fetch('/api/process-invoice/', {
-        method: 'POST',
+      const processResponse = await axios.post(`${import.meta.env.VITE_API_URL}/process-invoice/`, { pdf_url: url }, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ pdf_url: url }),
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
 
-      if (!processResponse.ok) {
-        throw new Error('Failed to process invoice');
-      }
-
-      const processedData = await processResponse.json();
+      const processedData = processResponse.data;
+      
+      // Add the image URL to the processed data
+      processedData.image_url = url;
       
       // Check if invoice qualifies for auto-approval
       if (checkAutoApproval(processedData)) {
         try {
-          // Attempt to auto-approve the invoice
+          // Attempt to auto-approve the invoice with image URL
           const approvalResult = await autoApproveInvoice(processedData);
           
           // Store the approved invoice data
@@ -136,12 +120,16 @@ function InvoiceUpload() {
       
       // If not auto-approved or auto-approval failed, continue with manual review
       const invoiceId = processedData.invoice_id;
-      localStorage.setItem(`invoice_${invoiceId}`, JSON.stringify(processedData));
+      localStorage.setItem(`invoice_${invoiceId}`, JSON.stringify({
+        ...processedData,
+        image_url: url,
+        status: 'Pending'
+      }));
       addNotification('Invoice uploaded and ready for review', 'success');
       navigate(`/review/${invoiceId}`);
     } catch (error) {
       console.error('Error:', error);
-      addNotification(error.message || 'Failed to process invoice', 'error');
+      addNotification(error.response?.data?.message || 'Failed to process invoice', 'error');
     } finally {
       setIsUploading(false);
     }
