@@ -275,7 +275,7 @@ def process_invoice(request):
                     "messages": [
                         {
                             "role": "system",
-                            "content": "You are an expert at analyzing invoices and extracting structured information from them. Return data in valid JSON format."
+                            "content": "You are an expert at analyzing invoices and extracting structured information from them. Return ONLY valid JSON data, no other text."
                         },
                         {
                             "role": "user",
@@ -296,10 +296,19 @@ def process_invoice(request):
             extracted_info = response_data['choices'][0]['message']['content']
             
             try:
-                # Validate that we got valid JSON
-                invoice_data = json.loads(extracted_info)
+                # Clean the response - remove any markdown formatting if present
+                cleaned_info = extracted_info.strip()
+                if cleaned_info.startswith('```json'):
+                    cleaned_info = cleaned_info[7:]
+                if cleaned_info.endswith('```'):
+                    cleaned_info = cleaned_info[:-3]
+                cleaned_info = cleaned_info.strip()
+                
+                # Parse as JSON
+                invoice_data = json.loads(cleaned_info)
                 return Response(invoice_data)
             except json.JSONDecodeError as e:
+                logger.error(f"Raw Groq response: {extracted_info}")
                 raise Exception(f'Failed to parse Groq API response as JSON: {str(e)}')
 
         finally:
