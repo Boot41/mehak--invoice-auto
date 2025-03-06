@@ -58,7 +58,7 @@ class InvoiceInfoDetailSerializer(serializers.ModelSerializer):
             'amount', 'status', 'confidence', 'confidence_score',
             'number_of_units', 'supplier_address', 'supplier_email',
             'supplier_phone', 'tax', 'total', 'notes', 'created_at',
-            'updated_at', 'line_items'
+            'updated_at', 'line_items', 'image_url'
         ]
 
 class GoogleAuthSerializer(serializers.Serializer):

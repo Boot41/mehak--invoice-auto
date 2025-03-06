@@ -185,6 +185,7 @@ def approve_invoice(request):
             tax=invoice_data.get('tax', None) or 0,
             total=invoice_data.get('total', None) or 0,
             notes=invoice_data.get('notes', None) or '',
+            image_url=invoice_data.get('image_url', None) or '',
             user=request.user
         )
 
