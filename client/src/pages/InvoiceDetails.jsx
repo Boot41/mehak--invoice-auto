@@ -47,11 +47,11 @@ function InvoiceDetails() {
           supplier_phone: response.data.supplier_phone || '+1 (555) 123-4567',
           line_items: response.data.line_items || []
         };
-        
         setInvoice(processedData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching invoice:', error);
+        setLoading(false);
       }
     };
 
@@ -65,6 +65,20 @@ function InvoiceDetails() {
   const handleDownload = () => {
     // In a real app, this would generate a PDF or other file format
     alert('In a real application, this would download the invoice as a PDF.');
+  };
+
+  const renderPDFViewer = () => {
+    if (!invoice.image_url) return null;
+
+    return (
+      <div className="pdf-container mt-4">
+        <iframe
+          src={invoice.image_url}
+          title="Invoice PDF"
+          className="w-full h-[600px] border-0"
+        />
+      </div>
+    );
   };
 
   if (loading) {
@@ -139,11 +153,7 @@ function InvoiceDetails() {
             <div>
               <h2 className="text-lg font-medium text-gray-900 mb-4">Invoice Preview</h2>
               <div className="border rounded-lg overflow-hidden">
-                <img
-                  src={invoice.image_url}
-                  alt="Invoice preview"
-                  className="w-full object-contain"
-                />
+                {renderPDFViewer()}
               </div>
             </div>
 
