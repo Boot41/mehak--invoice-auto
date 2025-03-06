@@ -152,7 +152,7 @@ class InvoiceItem(models.Model):
     quantity = models.IntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=10, decimal_places=2)
-    invoice = models.ForeignKey('InvoiceInfo', related_name='items', on_delete=models.CASCADE)
+    invoice = models.ForeignKey('InvoiceInfo', related_name='line_items', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.description} - {self.quantity} units"

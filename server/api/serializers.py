@@ -49,10 +49,17 @@ class InvoiceInfoListSerializer(serializers.ModelSerializer):
 
 class InvoiceInfoDetailSerializer(serializers.ModelSerializer):
     """Serializer for detailed invoice information"""
+    line_items = InvoiceItemSerializer(many=True, read_only=True)
+    
     class Meta:
         model = InvoiceInfo
-        fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+        fields = [
+            'id', 'invoice_number', 'date', 'due_date', 'supplier',
+            'amount', 'status', 'confidence', 'confidence_score',
+            'number_of_units', 'supplier_address', 'supplier_email',
+            'supplier_phone', 'tax', 'total', 'notes', 'created_at',
+            'updated_at', 'line_items'
+        ]
 
 class GoogleAuthSerializer(serializers.Serializer):
     email = serializers.EmailField()
