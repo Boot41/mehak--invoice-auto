@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/static/',  // Serve assets from Django's static URL
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -18,7 +19,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: '/',
         changeOrigin: true,
         secure: false,
       },
