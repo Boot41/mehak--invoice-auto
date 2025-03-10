@@ -5,30 +5,11 @@ WORKDIR /code
 COPY ./client/package*.json ./
 RUN npm install
 
-# Copy client environment file
-COPY ./client/.env ./.env
-
 COPY ./client .
 RUN npm run build
 
 # Stage 2 - Django Backend with Frontend Files
 FROM python:3.12.3-slim
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=backend.settings \
-    PYTHONPATH=/code \
-    # Set default values for environment variables
-    DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-your-secret-key-here} \
-    DEBUG=${DEBUG:-True} \
-    ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1} \
-    DB_ENGINE=${DB_ENGINE:-django.db.backends.sqlite3} \
-    DB_NAME=${DB_NAME:-db.sqlite3} \
-    GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-726611225914-ahgg2o6ub87k9iake8mf8jqgbnu1bg3v.apps.googleusercontent.com} \
-    GROQ_API_KEY=${GROQ_API_KEY:-} \
-    JWT_ACCESS_TOKEN_LIFETIME_MINUTES=${JWT_ACCESS_TOKEN_LIFETIME_MINUTES:-60} \
-    JWT_REFRESH_TOKEN_LIFETIME_DAYS=${JWT_REFRESH_TOKEN_LIFETIME_DAYS:-1}
 
 # Set work directory
 WORKDIR /code
@@ -49,7 +30,6 @@ COPY --from=client_build /code/dist/ /code/templates/
 
 # Copy backend code and environment file
 COPY ./server /code/
-COPY ./server/.env /code/.env
 
 # Create directory for SQLite database
 RUN mkdir -p /code/data

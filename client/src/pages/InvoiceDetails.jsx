@@ -35,7 +35,7 @@ function InvoiceDetails() {
   useEffect(() => {
     const fetchInvoice = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/invoices/${id}/`);
+        const response = await axios.get(`/api/invoices/${id}/`);
         const processedData = {
           ...response.data,
           amount: parseFloat(response.data.amount) || 0,

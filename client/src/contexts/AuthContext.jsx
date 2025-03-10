@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
   };
 
   const refreshTokens = async (refreshToken) => {
-    const response = await axios.post('/api/auth/refresh/', { refresh_token: refreshToken });
+    const response = await axios.post('/auth/refresh/', { refresh_token: refreshToken });
     return response.data;
   };
 

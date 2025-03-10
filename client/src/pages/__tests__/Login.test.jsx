@@ -73,7 +73,7 @@ describe('Login Component', () => {
     fireEvent.click(googleLoginDiv);
     
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/auth/google/', {
+      expect(fetch).toHaveBeenCalledWith('${import.meta.env.VITE_API_URL}/auth/google/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -50,7 +50,7 @@ function InvoiceUpload() {
   // Function to auto-approve invoice
   const autoApproveInvoice = async (invoiceData) => {
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/approve-invoice/`, invoiceData, {
+      const response = await axios.post(`/api/approve-invoice/`, invoiceData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -74,7 +74,7 @@ function InvoiceUpload() {
       const formData = new FormData();
       formData.append('document', file);
 
-      const uploadResponse = await axios.post(`${import.meta.env.VITE_API_URL}/upload-invoice/`, formData, {
+      const uploadResponse = await axios.post(`/api/upload-invoice/`, formData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data'
@@ -84,7 +84,7 @@ function InvoiceUpload() {
       const { url } = uploadResponse.data;
 
       // Now process the invoice using the URL
-      const processResponse = await axios.post(`${import.meta.env.VITE_API_URL}/process-invoice/`, { pdf_url: url }, {
+      const processResponse = await axios.post(`/api/process-invoice/`, { pdf_url: url }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

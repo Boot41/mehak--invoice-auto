@@ -143,7 +143,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:80",
     "http://127.0.0.1",
     "http://127.0.0.1:80",
-    "http://localhost:5173",  # React app URL
+    "http://localhost:8000",  # React app URL
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -168,6 +168,11 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+CSP_DEFAULT_SRC = ("'self'", "https://accounts.google.com")
+CSP_SCRIPT_SRC = ("'self'", "https://apis.google.com")
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 
 # Rate limiting settings
 RATELIMIT_USE_CACHE = 'default'
@@ -197,7 +202,7 @@ SIMPLE_JWT = {
 }
 
 # Google OAuth settings
-GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '726611225914-ahgg2o6ub87k9iake8mf8jqgbnu1bg3v.apps.googleusercontent.com')
+GOOGLE_CLIENT_ID = '726611225914-ahgg2o6ub87k9iake8mf8jqgbnu1bg3v.apps.googleusercontent.com'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

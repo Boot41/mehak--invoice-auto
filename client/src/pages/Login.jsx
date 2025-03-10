@@ -104,7 +104,7 @@ function Login() {
         )}
         <div className="flex justify-center">
           <GoogleLogin
-            clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+            clientId="726611225914-ahgg2o6ub87k9iake8mf8jqgbnu1bg3v.apps.googleusercontent.com"
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
             useOneTap={true}

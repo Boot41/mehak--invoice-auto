@@ -24,7 +24,7 @@ function InvoiceReview() {
   const handleApprove = async () => {
     setIsApproving(true);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/approve-invoice/`, {
+      const response = await axios.post(`/api/approve-invoice/`, {
         invoice_id: id,
         ...invoice,
         image_url: invoice.image_url // Ensure image_url is included
