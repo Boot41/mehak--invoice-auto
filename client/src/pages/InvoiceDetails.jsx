@@ -2,10 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Printer, Download } from 'lucide-react';
 import axios from 'axios';
+import axios from 'axios';
 
 function InvoiceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [invoice, setInvoice] = useState({
+    id: '',
+    invoice_number: '',
+    date: '',
+    due_date: '',
+    supplier: '',
+    amount: 0,
+    status: '',
+    confidence: '',
+    confidence_score: 0,
+    number_of_units: 0,
+    supplier_address: '123 Business Street, City, Country',
+    supplier_email: '',
+    supplier_phone: '+1 (555) 123-4567',
+    tax: 0,
+    total: 0,
+    notes: '',
+    image_url: '',
+    created_at: '',
+    updated_at: '',
+    user: null,
+    line_items: []
+  });
   const [invoice, setInvoice] = useState({
     id: '',
     invoice_number: '',
@@ -81,6 +105,20 @@ function InvoiceDetails() {
     );
   };
 
+  const renderPDFViewer = () => {
+    if (!invoice.image_url) return null;
+
+    return (
+      <div className="pdf-container mt-4">
+        <iframe
+          src={invoice.image_url}
+          title="Invoice PDF"
+          className="w-full h-[600px] border-0"
+        />
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -108,6 +146,7 @@ function InvoiceDetails() {
     <div className="max-w-5xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
         <button
+          onClick={() => navigate("/processed/")}
           onClick={() => navigate("/processed/")}
           className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
@@ -137,6 +176,7 @@ function InvoiceDetails() {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">
               Invoice #{invoice.invoice_number}
+              Invoice #{invoice.invoice_number}
             </h1>
             <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
               ${invoice.status === 'Approved' ? 'bg-green-100 text-green-800' : 
@@ -153,6 +193,7 @@ function InvoiceDetails() {
             <div>
               <h2 className="text-lg font-medium text-gray-900 mb-4">Invoice Preview</h2>
               <div className="border rounded-lg overflow-hidden">
+                {renderPDFViewer()}
                 {renderPDFViewer()}
               </div>
             </div>
@@ -206,6 +247,7 @@ function InvoiceDetails() {
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                           <p className="text-sm font-medium text-gray-500">Invoice Number</p>
                           <p className="mt-1 text-sm text-gray-900">{invoice.invoice_number}</p>
+                          <p className="mt-1 text-sm text-gray-900">{invoice.invoice_number}</p>
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                           <p className="text-sm font-medium text-gray-500">Invoice Date</p>
@@ -214,14 +256,19 @@ function InvoiceDetails() {
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                           <p className="text-sm font-medium text-gray-500">Due Date</p>
                           <p className="mt-1 text-sm text-gray-900">{invoice.due_date}</p>
+                          <p className="mt-1 text-sm text-gray-900">{invoice.due_date}</p>
                         </div>
                       </div>
 
+                      {invoice.supplier_address && (
                       {invoice.supplier_address && (
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                           <h3 className="text-sm font-medium text-gray-900 mb-3">Supplier Information</h3>
                           <div className="space-y-2">
                             <p className="text-sm text-gray-600">{invoice.supplier}</p>
+                            <p className="text-sm text-gray-600">{invoice.supplier_address}</p>
+                            {invoice.supplier_email && <p className="text-sm text-gray-600">{invoice.supplier_email}</p>}
+                            {invoice.supplier_phone && <p className="text-sm text-gray-600">{invoice.supplier_phone}</p>}
                             <p className="text-sm text-gray-600">{invoice.supplier_address}</p>
                             {invoice.supplier_email && <p className="text-sm text-gray-600">{invoice.supplier_email}</p>}
                             {invoice.supplier_phone && <p className="text-sm text-gray-600">{invoice.supplier_phone}</p>}
@@ -238,6 +285,41 @@ function InvoiceDetails() {
                     </div>
                   )}
                   {activeTab === 'lineItems' && (
+                    <div className="space-y-4">
+                      {invoice.line_items && invoice.line_items.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {invoice.line_items.map((item, index) => (
+                                <tr key={item.id || index}>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.description}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.quantity}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(item.unit_price).toFixed(2)}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(item.total).toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot className="bg-gray-50">
+                              <tr>
+                                <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-900">Total</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(invoice.total).toFixed(2)}</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          No line items provided for this invoice.
+                        </div>
+                      )}
                     <div className="space-y-4">
                       {invoice.line_items && invoice.line_items.length > 0 ? (
                         <div className="overflow-x-auto">
@@ -302,7 +384,31 @@ function InvoiceDetails() {
                                   {history.user}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-900">
+                        {invoice.approvalHistory && invoice.approvalHistory.length > 0 ? (
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {invoice.approvalHistory.map((history, index) => (
+                              <tr key={index}>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {history.user}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
                                   {history.action}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {history.notes}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        ) : (
+                          <tbody>
+                            <tr>
+                              <td colSpan="4" className="px-4 py-3 text-sm text-gray-500 text-center">
+                                Soon to be added feature!!
+                              </td>
+                            </tr>
+                          </tbody>
+                        )}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-900">
                                   {history.notes}
